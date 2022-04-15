@@ -1,33 +1,40 @@
 import joplin from 'api';
+import { ContentScriptType } from 'api/types';
+import { MenuItemLocation } from 'api/types';
+
+const ContentScriptID = 'format-painter';
 
 joplin.plugins.register({
 	onStart: async function() {
-		console.info('Plugin Started Successfully');
-		// Later, this is where you'll want to update the TOC
-		async function updateTocView() {
-			// Get the current note from the workspace.
-			const note = await joplin.workspace.selectedNote();
+		console.info('Match Highlighter started!');
 
-			// Keep in mind that it can be `null` if nothing is currently selected!
-			if (note) {
-				console.info('Note content has changed! New note is:', note);
-			} else {
-				console.info('No note is selected');
-			}
-		}
+		await joplin.contentScripts.register(
+			ContentScriptType.CodeMirrorPlugin,
+			'matchHighlighter',
+			'./joplinMatchHighlighter.js'
+		);
 
-		// This event will be triggered when the user selects a different note
-		await joplin.workspace.onNoteSelectionChange(() => {
-			updateTocView();
+		await joplin.contentScripts.register(
+			ContentScriptType.CodeMirrorPlugin,
+			ContentScriptID, //contentscript id
+			'./formatpainter.js'
+		);
+
+		await joplin.commands.register({
+			name: 'paint',
+			label: 'paint the selected text',
+			execute: async () => {
+				await joplin.commands.execute('editor.execCommand', {
+					name: 'printSomething',
+					args: ['Anything']
+				});
+			},
 		});
-
-		// This event will be triggered when the content of the note changes
-		// as you also want to update the TOC in this case.
-		await joplin.workspace.onNoteChange(() => {
-			updateTocView();
-		});
-
-		// Also update the TOC when the plugin starts
-		updateTocView();
+/*
+		await joplin.views.menuItems.create('printSomethingButton', 
+			'printSomething', MenuItemLocation.Tools, 
+			{ accelerator: 'Ctrl+Alt+Shift+U' });*/
+		
+		
 	},
 });

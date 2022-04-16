@@ -1,38 +1,43 @@
+var cm = null; //codemirror reference
+
 function plugin(CodeMirror) {
     
-    CodeMirror.defineOption('enable-formatpainter', false, async function(cm, val, old) {
-		// Cleanup
-		if (old && old != CodeMirror.Init) {
-			dbg(' old cleared ');
-		}
-		// setup
-		if (val) {
-			dbg(' enabled format painter ');
-            /*cm.on('mousedown',function(cmarg, docobj){
-                dbg(cm.getSelection());
-            });*/
-            doc = document.getElementsByClassName('CodeMirror-code');
-            dbg(doc);
-            doc[0].addEventListener('mouseup', function(eventarg){
-                dbg(cm.getSelection());
-            });
-		}
-	});
+    var listeneradded = false;
+    CodeMirror.defineExtension('toggleFormatPainter', function( fore, end, enable ) {
+        dbg('enable: ' + enable);
+        cm = this;
+        if (enable && !listeneradded){
+            document.addEventListener('mouseup', mouseup_);
+            fore_ = fore;
+            end_ = end;
+            listeneradded = true;
+        }
+        else {
+            dbg('toggle off');
+            document.removeEventListener('mouseup', mouseup_);
+            listeneradded = false;
+        }
+    });
+}
+function dbg(stringarg){
+    console.info('dbg : ' + stringarg);
+}
+//cm = this;
+
+var fore_ = '';
+var end_ = '';
+function mouseup_(eventarg){
+    txt = cm.getSelection();
+    if (txt != '') {
+        cm.replaceSelection(fore_ + txt + end_ );
+    }
 }
 
-function dbg(logarg){
-    console.log('painterdbg: ', logarg);
-}
 
 module.exports = {
     default: function(_context) { 
         return {
-            
-            plugin: function(CodeMirror) {
-				return plugin(CodeMirror, _context);
-			},
-            codeMirrorResources: ['addon/mode/multiplex'],
-            codeMirrorOptions: {'enable-formatpainter':true},
+            plugin: plugin,
         }
     },
 }

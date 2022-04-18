@@ -4,8 +4,8 @@ Currently it just support the *mouse selection*.
 
 # Usage
 
-Toggle the painter on/off: Tool->Toggle Format Painter
+Toggle the painter on/off: click *Painter Icon* in the toolbar
 
-At the code/editor side select the text which you want to wrap/painting with mouse.
+At the editor side select the text which you want to wrap/painting with mouse.
 
 Settings: The text you want to wrap with. 

@@ -1,5 +1,4 @@
-# Joplin Plugin
-
+# Format Painter
 This plugin can help you "Paint Text" easily. Functionally it adds text before and after what you select everytime when you toggle it on.
 Currently it just support the *mouse selection*.
 

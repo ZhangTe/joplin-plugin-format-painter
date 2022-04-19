@@ -1,10 +1,9 @@
 var cm = null; //codemirror reference
 
-function plugin(CodeMirror) {
+function plugin(CodeMirror, _context) {
     
     var listeneradded = false;
     CodeMirror.defineExtension('toggleFormatPainter', function( fore, end/*, enable */) {
-        //dbg('enable: ' + enable);
         cm = this;
         if (!listeneradded){
             document.addEventListener('mouseup', mouseup_);
@@ -13,16 +12,20 @@ function plugin(CodeMirror) {
             listeneradded = true;
         }
         else {
-            //dbg('toggle off');
             document.removeEventListener('mouseup', mouseup_);
             listeneradded = false;
         }
     });
+    
+    CodeMirror.defineExtension('getSel', function( isEnd ){ // isEnd true:end; false:head
+        var sele = getSelection() + '';
+        var name_ = 'getSel_' + (isEnd?'r':'l');
+        var res = {name:name_, key:sele};
+        _context.postMessage(res);
+
+    });
+
 }
-/*function dbg(stringarg){
-    console.info('dbg : ' + stringarg);
-}*/
-//cm = this;
 
 var fore_ = '';
 var end_ = '';
@@ -38,6 +41,7 @@ function moveCursor(cursor, step) {
 }
 
 function mouseup_(eventarg){
+
     if (cm.somethingSelected()) {
         var leftAlreadyExist = false;
         var rightAlreadyExist = false;
@@ -62,8 +66,10 @@ function mouseup_(eventarg){
         if( !rightAlreadyExist && !leftAlreadyExist ) {
             cm.setSelection(cursorR, cursorL);
             cm.replaceSelection(fore_ + txt + end_ );
+            
         }
         else if ( rightAlreadyExist && leftAlreadyExist ) {
+            cm.setSelection(cursorRR, cursorR);
             cm.replaceSelection('');
             cm.setSelection(cursorL, cursorLL);
             cm.replaceSelection('');
@@ -76,9 +82,10 @@ function mouseup_(eventarg){
             cm.setCursor(cursorR);
             cm.replaceSelection(end_);
         }*/
+        else {
+            cm.setSelection(cursorR, cursorL);
+        }
         
-        
-        //cm.replaceSelection(fore_ + txt + end_ );
     }
 }
 
@@ -86,7 +93,9 @@ function mouseup_(eventarg){
 module.exports = {
     default: function(_context) { 
         return {
-            plugin: plugin,
+            plugin: function(CodeMirror) {
+				return plugin(CodeMirror, _context);
+			}
         }
-    },
+    }
 }

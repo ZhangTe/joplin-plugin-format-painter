@@ -9,3 +9,14 @@ Toggle the painter on/off: click *Painter Icon* in the toolbar
 At the editor side select the text which you want to wrap/painting with mouse.
 
 Settings: The text you want to wrap with. 
+
+# QuickSetting & Hotkeys
+
+To *quick-setting* the head and end text:
+first select the pattern in editor -- 
+then
+use `ctrl-alt-,` for *head*;
+use `ctrl-alt-.` for *end*. (use .>, distinct from numpad ./del)
+
+To *toggle* the painter
+use `ctrl-shift-C`.

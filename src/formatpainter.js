@@ -3,15 +3,15 @@ var cm = null; //codemirror reference
 function plugin(CodeMirror, _context) {
     
     var listeneradded = false;
-    CodeMirror.defineExtension('toggleFormatPainter', function( fore, end/*, enable */) {
+    CodeMirror.defineExtension('toggleFormatPainter', function( fore, end, enable ) {
         cm = this;
-        if (!listeneradded){
+        if (!listeneradded && enable){
             document.addEventListener('mouseup', mouseup_);
             fore_ = fore;
             end_ = end;
             listeneradded = true;
         }
-        else {
+        else if ( !enable ){
             document.removeEventListener('mouseup', mouseup_);
             listeneradded = false;
         }

@@ -6,7 +6,7 @@
 	"name": "Format-Painter",
 	"description": "Format Painter can help you to set text-formats and apply them anywhere with just a swipe.",
 	"author": "ztbxxt",
-	"homepage_url": "",
+	"homepage_url": "https://github.com/ZhangTe/joplin-format-painter.git",
 	"repository_url": "https://github.com/ZhangTe/joplin-format-painter.git",
 	"keywords": []
 }

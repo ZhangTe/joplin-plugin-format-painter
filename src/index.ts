@@ -32,6 +32,8 @@ const HOTKEY_TOGGLE            = 'Ctrl+Shift+C';
 const HOTKEY_QS_L              = 'Ctrl+Alt+,';
 const HOTKEY_QS_R              = 'Ctrl+Alt+.';
 
+
+let   toggled = false;
 joplin.plugins.register({
 	onStart: async function() {
 		await joplin.settings.registerSection(SETTING_SECTION_ID, {
@@ -69,7 +71,7 @@ joplin.plugins.register({
 			execute: async () => {
 				await joplin.commands.execute('editor.execCommand', {
 					name: CODEMIRROR_TOGGLE_COMMAND,
-					args: [await joplin.settings.value(SETTING_FORE),await joplin.settings.value(SETTING_END)] 
+					args: [await joplin.settings.value(SETTING_FORE),await joplin.settings.value(SETTING_END),toggle()] 
 				});
 			},
 		});
@@ -120,6 +122,10 @@ joplin.plugins.register({
 			return "";
 		});
 
+		function toggle(){
+			toggled = !toggled;
+			return toggled;
+		}
 	}
 });
 

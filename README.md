@@ -20,3 +20,9 @@ use `ctrl-alt-.` for *end*. (use .>, distinct from numpad ./del)
 
 To *toggle* the painter
 use `ctrl-shift-C`.
+
+![usage-gif-1](https://github.com/ZhangTe/joplin-plugin-format-painter/blob/main/doc/assets/joplin-format-painter-usage1.gif)
+
+![usage-gif-2](https://github.com/ZhangTe/joplin-plugin-format-painter/blob/main/doc/assets/joplin-format-painter-usage2.gif)
+
+![usage-gif-1](https://github.com/ZhangTe/joplin-plugin-format-painter/blob/main/doc/assets/joplin-format-painter-usage3.gif)

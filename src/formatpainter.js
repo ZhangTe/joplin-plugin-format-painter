@@ -96,13 +96,13 @@ function moveCursor(cursor, step) {
         return {line:line_, ch:ch_}
     }
     else if ( ch_ > lineLen ) {
-        if(line_ == cm.lineCount() - 1){
+        if(line_ >= cm.lineCount() - 1){
             return {line:line_, ch:lineLen}
         }
         else return moveCursor({line:line_+1,ch:0}, ch_ - lineLen - 1);
     }
     else {
-        if(line_ == 0){
+        if(line_ < 1){
             return {line:0, ch:0}
         }
         else {
@@ -125,7 +125,10 @@ function cursorOver(cur1, cur2){
 
 function mouseup_(eventarg){
 
+    console.log('selection output');
+    console.log(cm.listSelections());
     if (cm.somethingSelected()) {
+        
         var cursorL = cm.getCursor('from');
         var cursorR = cm.getCursor('to');
         trim(cursorL,cursorR);
@@ -168,10 +171,10 @@ function trim(cursorL, cursorR){
         keys.push({key:headislonger?end_:fore_,count:0});
         //console.log('keys');
         //console.log(keys);
-        for (/*var m = 0*/; cursorOver(cursorR,curIter); ){
+        do{
             
             if (  stringhead==null && cursorOver(curIter,cursorL) ) stringhead = curIter;
-            stringend = curIter;
+            
 
             var keyhit = false;
 
@@ -193,36 +196,9 @@ function trim(cursorL, cursorR){
             });
 
             if (!keyhit)  curIter = moveCursor(curIter,1)
-            /*
-            curSel = moveCursor(curIter, fore_.length);
-            cm.setSelection(curIter,curSel);
-            if ( !headislonger && m < end_.length - fore_.length){
-
-            }
-            else if(Stringequal(cm.getSelection(),fore_)){
-                curs.push({head:curIter,end:curSel});
-                i++;
-                curIter = moveCursor(curIter, fore_.length);
-                m+= fore_.length;
-                continue;
-            }
-
-            curSel = moveCursor(curIter, end_.length);
-            cm.setSelection(curIter,curSel);
-            if ( fore_.length > end_.length && m < fore_.length - end_.length){
-
-            }
-            else if(Stringequal(cm.getSelection(),end_)){
-                curs.push({head:curIter,end:curSel});
-                j++;
-                curIter = moveCursor(curIter, end_.length);
-                m+= end_.length;
-                continue;
-            }
-            
-            curIter = moveCursor(curIter,1)
-            m++;*/
-        }
+            stringend = curIter;
+           
+        }while(!cursorOver(curIter,cursorR));
         //console.log('keys after processing');
         //console.log(keys);
         i = headislonger?keys[0].count:keys[1].count;
@@ -242,11 +218,12 @@ function trim(cursorL, cursorR){
     
     }
     else {
-        for (var m = 0; cursorOver(cursorR,curIter);) {
+        var m = 0;
+        do  {
             curSel = moveCursor(curIter, fore_.length);
             cm.setSelection(curIter,curSel);
             if (  stringhead==null && (m >= startOffset) ) stringhead = curIter;
-            stringend = curIter;
+            
             if(Stringequal(cm.getSelection(),fore_)){
                 curs.push({head:curIter,end:curSel});
                 j++;
@@ -255,9 +232,10 @@ function trim(cursorL, cursorR){
                 continue;
             }
             curIter = moveCursor(curIter,1)
+            stringend = curIter;
             m++;
-        }
-        i = j / 2;
+        }while(!cursorOver(curIter,cursorR));
+        i = Math.floor(j / 2);
         j = j - i;
     }
 

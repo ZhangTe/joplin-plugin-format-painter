@@ -1,11 +1,45 @@
-var cm = null; //codemirror reference
+/**
+ * this is a codemirror plugin for joplin editor.
+ * https://github.com/ZhangTe/joplin-plugin-format-painter
+ * 
+ * Author: T.Zhang
+ * 2022-5 in Tianjin.
+ */
 
+/**
+ * codemirror(api) document reference
+ */
+var cm = null; 
+
+/**
+ * code mirror api: https://codemirror.net/doc/manual.html
+ * code mirror on github: https://github.com/codemirror/codemirror
+ * this codemirror plugin is used as a template: https://github.com/laurent22/joplin/tree/80b16dd17e227e3f538aa221d7b6cc2d81688e72/packages/app-cli/tests/support/plugins/codemirror_content_script
+ * @param {CodeMirror} CodeMirror 
+ * @param {*} _context send message to the controller.
+ */
 function plugin(CodeMirror, _context) {
-    
+    /**
+     * flag shows whether the painter is toggled, or to say, the eventhandler 'mouse click' is setup in the editor.
+     */
     var listeneradded = false;
-    CodeMirror.defineExtension('toggleFormatPainter', function( fore, end, enable ) {
+    /**
+     * toggle format painter is the function which can switch up the painter.
+     */
+    CodeMirror.defineExtension('toggleFormatPainter', 
+    /**
+     * initializing the painter with joplin command.
+     * @param {string} fore keyword
+     * @param {string} end keyword
+     * @param {boolean} enable to tell the plugin toggle on/off
+     */
+    function( fore, end, enable ) {
         cm = this;
         if (!listeneradded && enable){
+            /**
+             * use the native js event-handler to implement the click listener
+             * ?? I haven't found out how to use a codemirror api to do this. ??
+             */
             document.addEventListener('mouseup', mouseup_);
             fore_ = fore;
             end_ = end;
@@ -16,8 +50,16 @@ function plugin(CodeMirror, _context) {
             listeneradded = false;
         }
     });
-    
-    CodeMirror.defineExtension('getSel', function( isEnd ){ // isEnd true:end; false:head
+    /**
+     * Get SELection command can quickly set the fore and end words by sending a message to
+     * the controller, once the controller send a request to this plugin.
+     */
+    CodeMirror.defineExtension('getSel', 
+    /**
+     * let the plugin know which keyword does the controller want, fore or end
+     * @param {boolean} isEnd when true:the controller need to update the end word, when false: the fore word
+     */
+    function( isEnd ){ 
         var sele = getSelection() + '';
         var name_ = 'getSel_' + (isEnd?'r':'l');
         var res = {name:name_, key:sele};
@@ -26,14 +68,26 @@ function plugin(CodeMirror, _context) {
     });
 
 }
-
+/**
+ * the keyword fore
+ */
 var fore_ = '';
+/**
+ * the keyword end
+ */
 var end_ = '';
+
 function Stringequal (string1, string2){
     if (string1 === string2 ) return true;
     else return false;
 }
 
+/**
+ * Get a new cursor from the given one and a moving step.
+ * @param {Cursor} cursor {line,ch}
+ * @param {integer} step 
+ * @returns {Cursor}
+ */
 function moveCursor(cursor, step) {
     var line_ = cursor.line;
     var lineLen = cm.getLine(line_).length;
@@ -58,6 +112,13 @@ function moveCursor(cursor, step) {
     }
 }
 
+/**
+ * Compare two cursor to determine which one is behind.
+ * get true if cursor 1 is NOT BEFORE cursor 2.
+ * @param {Cursor} cur1 
+ * @param {Cursor} cur2 
+ * @returns {boolean}
+ */
 function cursorOver(cur1, cur2){
     return (cur1.line == cur2.line && cur1.ch >= cur2.ch) || (cur1.line > cur2.line) ;
 }
@@ -67,107 +128,139 @@ function mouseup_(eventarg){
     if (cm.somethingSelected()) {
         var cursorL = cm.getCursor('from');
         var cursorR = cm.getCursor('to');
-        /*var leftAlreadyExist = false;
-        var rightAlreadyExist = false;
-        var txt = cm.getSelection();
-        
-        var cursorLL = moveCursor(cursorL, -fore_.length);
-       
-        var cursorRR =  moveCursor(cursorR, end_.length);
-        cm.setSelection(cursorL, cursorLL);
-        if (Stringequal ( cm.getSelection(), fore_ )) {
-            leftAlreadyExist = true;
-        }
-        
-        cm.setSelection(cursorRR, cursorR);
-        if (Stringequal ( cm.getSelection(), end_ )) {
-            rightAlreadyExist = true;
-        }
-
-        if( !rightAlreadyExist && !leftAlreadyExist ) {
-            cm.setSelection(cursorR, cursorL);
-            cm.replaceSelection(fore_ + txt + end_ );
-            
-            /* another implementation
-            cm.setSelection(cursorR);
-            cm.addSelection(cursorL);
-            cm.replaceSelections([fore_ ,end_ ]);
-            cm.setCursor(cursorL);
-            
-        }
-        else if ( rightAlreadyExist && leftAlreadyExist ) {
-            cm.setSelection(cursorRR, cursorR);
-            cm.addSelection(cursorL, cursorLL);
-            cm.replaceSelections(['','']);
-            cm.setCursor(cursorLL);
-        }
-        else {
-            //cm.setSelection(cursorR, cursorL);
-            
-        }*/
-        //cm.setCursor(cursorLL);
-        trimPainter(cursorL,cursorR);
+        trim(cursorL,cursorR);
     }
 }
 
 
-
-function trimPainter(cursorL, cursorR){
+/**
+ * To trim the keywords in the selected string paragraph
+ * if there is multiple keywords in the selection, this will delete them by fore-end pair, 
+ * until it is all cleared or only one side keyword left.
+ * if there is nothing found, this will wrap the text with the keywords.
+ * @param {Cursor} cursorL 
+ * @param {Cursor} cursorR 
+ * @returns 
+ */
+function trim(cursorL, cursorR){
+    /**store the positions of the fore and end words shown up */ 
     var curs = [];
-    var startOffset = (fore_.length > end_.length)?fore_.length:end_.length;
-    var curStart  = moveCursor(cursorL, -startOffset);
-    var curIter = curStart;
-    var curSel   = cursorL;
-    var stringhead = null;
-    var stringend = null;
+
+    var headislonger = fore_.length > end_.length;
+    /**max length of the fore and end words */
+    
+    var startOffset = (headislonger)?fore_.length:end_.length;
+    /**store the start position of searching */
+    var curStart  = moveCursor(cursorL, -startOffset); 
+    /**the iterator of cursor for searching */
+    var curIter = curStart; 
+    /**the select anchor cursor for iterating */ 
+    var curSel   = cursorL; 
+    /**store the original selection head */
+    var stringhead = null;  
+    /**store the original selection end */
+    var stringend = null;  
+    /**count of the times fore and end strings shown up in the selected string */
     var i = 0,j = 0;
-    for (var m = 0; cursorOver(cursorR,curIter); ){
-        curSel = moveCursor(curIter, fore_.length);
-        cm.setSelection(curIter,curSel);
-        if (  stringhead==null && (m >= startOffset) ) stringhead = curIter;
-        stringend = curIter;
+    if( !Stringequal(fore_, end_) ) {
+        var keys = [];
+        keys.push({key:headislonger?fore_:end_,count:0});
+        keys.push({key:headislonger?end_:fore_,count:0});
+        //console.log('keys');
+        //console.log(keys);
+        for (/*var m = 0*/; cursorOver(cursorR,curIter); ){
+            
+            if (  stringhead==null && cursorOver(curIter,cursorL) ) stringhead = curIter;
+            stringend = curIter;
 
-        if ( fore_.length < end_.length && m < end_.length - fore_.length){
+            var keyhit = false;
 
-        }
-        else if(Stringequal(cm.getSelection(),fore_)){
-            curs.push({head:curIter,end:curSel});
-            i++;
-            curIter = moveCursor(curIter, fore_.length);
-            m+= fore_.length;
-            continue;
-        }
+            keys.forEach((key_) => {
+                if (keyhit) return;
+                curSel = moveCursor(curIter, key_.key.length);
+                if (cursorOver(curSel,cursorL)){
+                    cm.setSelection(curIter,curSel);
+                    if(Stringequal(cm.getSelection(),key_.key)){
+                        curs.push({head:curIter,end:curSel});
+                        key_.count++;
+                        curIter = moveCursor(curIter, key_.key.length);
+                        keyhit = true;
+                        //console.log('hit');
+                        //console.log(cm.getSelection());
+                        return;
+                    }
+                }
+            });
 
-        curSel = moveCursor(curIter, end_.length);
-        cm.setSelection(curIter,curSel);
-        if ( fore_.length > end_.length && m < fore_.length - end_.length){
+            if (!keyhit)  curIter = moveCursor(curIter,1)
+            /*
+            curSel = moveCursor(curIter, fore_.length);
+            cm.setSelection(curIter,curSel);
+            if ( !headislonger && m < end_.length - fore_.length){
 
+            }
+            else if(Stringequal(cm.getSelection(),fore_)){
+                curs.push({head:curIter,end:curSel});
+                i++;
+                curIter = moveCursor(curIter, fore_.length);
+                m+= fore_.length;
+                continue;
+            }
+
+            curSel = moveCursor(curIter, end_.length);
+            cm.setSelection(curIter,curSel);
+            if ( fore_.length > end_.length && m < fore_.length - end_.length){
+
+            }
+            else if(Stringequal(cm.getSelection(),end_)){
+                curs.push({head:curIter,end:curSel});
+                j++;
+                curIter = moveCursor(curIter, end_.length);
+                m+= end_.length;
+                continue;
+            }
+            
+            curIter = moveCursor(curIter,1)
+            m++;*/
         }
-        else if(Stringequal(cm.getSelection(),end_)){
-            curs.push({head:curIter,end:curSel});
-            j++;
-            curIter = moveCursor(curIter, end_.length);
-            m+= end_.length;
-            continue;
+        //console.log('keys after processing');
+        //console.log(keys);
+        i = headislonger?keys[0].count:keys[1].count;
+        j = headislonger?keys[1].count:keys[0].count;
+        if ( i == j && i > 0 ) {
+            i = 1;
+            j = 1;
         }
-        
-        curIter = moveCursor(curIter,1)
-        m++;
+        else if ( i > j ) {
+            i = i - j;
+            j = 0;
+        }
+        else if ( i < j ) {
+            j = j - i;
+            i = 0;
+        } 
+    
     }
-    if ( i == j && i > 0 ) {
-        i = 1;
-        j = 1;
-    }
-    else if ( i > j ) {
-        i = i - j;
-        j = 0;
-    }
-    else if ( i < j ) {
+    else {
+        for (var m = 0; cursorOver(cursorR,curIter);) {
+            curSel = moveCursor(curIter, fore_.length);
+            cm.setSelection(curIter,curSel);
+            if (  stringhead==null && (m >= startOffset) ) stringhead = curIter;
+            stringend = curIter;
+            if(Stringequal(cm.getSelection(),fore_)){
+                curs.push({head:curIter,end:curSel});
+                j++;
+                curIter = moveCursor(curIter, fore_.length);
+                m+= fore_.length;
+                continue;
+            }
+            curIter = moveCursor(curIter,1)
+            m++;
+        }
+        i = j / 2;
         j = j - i;
-        i = 0;
-    } 
+    }
 
-    //if(cursorOver(cursorL,stringhead))
     if(stringhead!=null)
         cm.setSelection(stringhead);
     
@@ -223,6 +316,47 @@ function trimPainter(cursorL, cursorR){
     }
     replace.push((i<j)?cat:'')
     cm.replaceSelections(replace, 'around');
+}
+
+function easymodetrim(){
+    if (cm.somethingSelected()) {
+        var cursorL = cm.getCursor('from');
+        var cursorR = cm.getCursor('to');
+        var leftAlreadyExist = false;
+        var rightAlreadyExist = false;
+        var txt = cm.getSelection();
+        
+        var cursorLL = moveCursor(cursorL, -fore_.length);
+       
+        var cursorRR =  moveCursor(cursorR, end_.length);
+        cm.setSelection(cursorL, cursorLL);
+        if (Stringequal ( cm.getSelection(), fore_ )) {
+            leftAlreadyExist = true;
+        }
+        
+        cm.setSelection(cursorRR, cursorR);
+        if (Stringequal ( cm.getSelection(), end_ )) {
+            rightAlreadyExist = true;
+        }
+        if( !rightAlreadyExist && !leftAlreadyExist ) {
+            cm.setSelection(cursorR, cursorL);
+            cm.replaceSelection(fore_ + txt + end_ );
+            /* //another implementation
+            cm.setSelection(cursorR);
+            cm.addSelection(cursorL);
+            cm.replaceSelections([fore_ ,end_ ]);
+            cm.setCursor(cursorL);*/
+            
+        }
+        else if ( rightAlreadyExist && leftAlreadyExist ) {
+            cm.setSelection(cursorRR, cursorR);
+            cm.addSelection(cursorL, cursorLL);
+            cm.replaceSelections(['','']);
+        }
+        else {
+        }
+        cm.setCursor(cursorLL);
+    }
 }
 
 module.exports = {

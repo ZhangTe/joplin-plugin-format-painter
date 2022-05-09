@@ -165,6 +165,9 @@ function trim(cursorL, cursorR){
     var stringend = null;  
     /**count of the times fore and end strings shown up in the selected string */
     var i = 0,j = 0;
+
+
+    var tmpcursor;
     if( !Stringequal(fore_, end_) ) {
         var keys = [];
         keys.push({key:headislonger?fore_:end_,count:0});
@@ -172,7 +175,7 @@ function trim(cursorL, cursorR){
         //console.log('keys');
         //console.log(keys);
         do{
-            
+            tmpcursor = curIter;
             if (  stringhead==null && cursorOver(curIter,cursorL) ) stringhead = curIter;
             
 
@@ -194,11 +197,11 @@ function trim(cursorL, cursorR){
                     }
                 }
             });
-
-            if (!keyhit)  curIter = moveCursor(curIter,1)
             stringend = curIter;
-           
-        }while(!cursorOver(curIter,cursorR));
+            if (!keyhit)  curIter = moveCursor(curIter,1)
+            
+            
+        }while(cursorOver(cursorR,curIter) && !cursorOver(tmpcursor,curIter));
         //console.log('keys after processing');
         //console.log(keys);
         i = headislonger?keys[0].count:keys[1].count;
@@ -220,6 +223,7 @@ function trim(cursorL, cursorR){
     else {
         var m = 0;
         do  {
+            tmpcursor = curIter;
             curSel = moveCursor(curIter, fore_.length);
             cm.setSelection(curIter,curSel);
             if (  stringhead==null && (m >= startOffset) ) stringhead = curIter;
@@ -231,10 +235,10 @@ function trim(cursorL, cursorR){
                 m+= fore_.length;
                 continue;
             }
-            curIter = moveCursor(curIter,1)
             stringend = curIter;
+            curIter = moveCursor(curIter,1)
             m++;
-        }while(!cursorOver(curIter,cursorR));
+        }while(cursorOver(cursorR,curIter) && !cursorOver(tmpcursor,curIter));
         i = Math.floor(j / 2);
         j = j - i;
     }

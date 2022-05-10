@@ -5,7 +5,7 @@ This is a [joplin](https://joplinapp.org/) notebook plugin.
 This plugin can help you "Paint Text" easily. Functionally it adds text before and after what you select everytime when you toggle it on.
 Currently it just support the *mouse selection*.
 
->[joplin github仓库](https://github.com/laurent22/joplin)
+>[joplin github repo](https://github.com/laurent22/joplin)
 
 # Usage
 

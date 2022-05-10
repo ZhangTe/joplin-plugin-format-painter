@@ -2,7 +2,7 @@
 # 格式刷
 本插件是Joplin笔记本插件，实现文本编辑时的“格式刷”功能。激活格式刷后，直接选中文本，就可以预设的前后“格式标签”将文本用“包装”起来。目前插件仅支持*鼠标选*中操作。
 
->[joplin](https://joplinapp.org/)
+>[joplin](https://joplinapp.org/) <br/>
 >[joplin github仓库](https://github.com/laurent22/joplin)
 
 # 使用方法
